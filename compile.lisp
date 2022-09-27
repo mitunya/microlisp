@@ -427,7 +427,9 @@ value **arguments = NIL;~%"
   (format t "int main (void) {~%")
   (loop for id from 0
      for definition in definitions
-     do (format t "~a(~a[~a] = (~a *) "
+     do (format t "/* ~a */~%" definition)
+     ;;; do (format t "~a(~a[~a] = (~a *) "
+       (format t "~a(~a[~a] = (~a *) "
 		*use-function-name*
 		*global-environment-name*
 		id
@@ -444,6 +446,7 @@ value **arguments = NIL;~%"
   (print-statement (format t "~a()" *garbage-collect-function-name*))
   (format t "return ~a;~%}~%" *default-return-value*))
 
+#+nil
 (defun print-program (procedures definitions expressions)
   "Prints program."
   (print-program-initialization (length definitions))
@@ -452,6 +455,35 @@ value **arguments = NIL;~%"
      do (print-procedure-function id procedure))
   (print-program-main-function expressions)
   (print-program-kickstart definitions))
+
+(defun print-program (procedures definitions expressions)
+  "Prints program."
+  (print-program-initialization (length definitions))
+
+  (format t "~%/* define */~%")
+  (loop
+   for def in definitions
+   do
+     (format t "/* ~a */~%"  def))
+     (format t "/*  */~%")
+
+     (loop for id from 0
+           for procedure in procedures
+           do
+             (let ((f (find-if #'(lambda (def)
+                                   (if (and (equal (caadr def) 'lambda)
+                                            (equal (cadadr def) id))
+                                       def))
+                               definitions
+                               )))
+               (if f
+                   (format t "~%/* ~a */~%" f)
+                 (format t "~%") ) )
+
+             (print-procedure-function id procedure) )
+
+     (print-program-main-function expressions)
+     (print-program-kickstart definitions) )
 
 (defun nextract-procedures (expanded-expressions)
   "Extract procedures from EXPANDED-EXPRESSIONS, return procedures and
